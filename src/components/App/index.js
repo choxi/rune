@@ -5,6 +5,7 @@ import Path from '../Path'
 import tf from 'tfjs'
 
 import Model from '../../model'
+import { centerCrop } from '../../utils'
 import './index.scss'
 
 export default class App extends React.PureComponent {
@@ -19,6 +20,7 @@ export default class App extends React.PureComponent {
 
     this.updateCanvasDimensions = this.updateCanvasDimensions.bind(this)
     this.model = new Model()
+    this.gestureRefs = {}
   }
 
   componentDidMount() {
@@ -72,12 +74,49 @@ export default class App extends React.PureComponent {
   }
 
   async train() {
-    const h = await this.model.train()
+    const data = this.preprocessGestures()
+    const h = await this.model.train(data)
+  }
+
+  preprocessGestures() {
+    this.state.gestures.forEach((gesture, index) => {
+      const canvas = this.gestureRefs[index].canvas
+      const data = this.preprocessGesture(canvas)
+      debugger
+    })
+  }
+
+  preprocessGesture(canvas) {
+    const ctx = canvas.getContext('2d')
+
+    // center crop
+    const imageDataCenterCrop = centerCrop(ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height))
+    const ctxCenterCrop = document.getElementById('input-canvas-centercrop').getContext('2d')
+    ctxCenterCrop.canvas.width = imageDataCenterCrop.width
+    ctxCenterCrop.canvas.height = imageDataCenterCrop.height
+    ctxCenterCrop.putImageData(imageDataCenterCrop, 0, 0)
+
+    // scaled to 28 x 28
+    const ctxScaled = document.getElementById('input-canvas-scaled').getContext('2d')
+    ctxScaled.save()
+    ctxScaled.scale(28 / ctxCenterCrop.canvas.width, 28 / ctxCenterCrop.canvas.height)
+    ctxScaled.clearRect(0, 0, ctxCenterCrop.canvas.width, ctxCenterCrop.canvas.height)
+    ctxScaled.drawImage(document.getElementById('input-canvas-centercrop'), 0, 0)
+    const imageDataScaled = ctxScaled.getImageData(0, 0, ctxScaled.canvas.width, ctxScaled.canvas.height)
+    ctxScaled.restore()
+
+    const data = imageDataScaled.data
+    const input = new Float32Array(784)
+    for (let i = 0, len = data.length; i < len; i += 4) {
+      input[i / 4] = data[i + 3] / 255
+    }
+
+    return input
   }
 
   render() {
     const gestures = this.state.gestures.map((gesture, index) => {
-      return <Path key={index} path={gesture.path} canvas={gesture.canvas} />
+      return <Path ref={node => this.gestureRefs[index] = node } key={index} path={gesture.path} canvas={gesture.canvas} />
     })
 
     return (
@@ -94,6 +133,8 @@ export default class App extends React.PureComponent {
             onPointerUp={event => this.pointerUp(event)}
           >
             <canvas { ...this.state.canvas } ref={node => this.canvas = node}></canvas>
+            <canvas id="input-canvas-centercrop" style={{ display: 'none' }}></canvas>
+            <canvas id="input-canvas-scaled" width="28" height="28" style={{ display: 'none' }}></canvas>
           </Pointable>
         </div>
       </div>
