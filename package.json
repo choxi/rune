@@ -22,19 +22,23 @@
   ],
   "author": "Roshan Choxi",
   "dependencies": {
+    "@tensorflow/tfjs": "0.11.1",
     "babel-runtime": "^6.26.0",
+    "brainjs": "0.7.4",
     "node-sass": "^4.7.2",
     "prop-types": "^15.6.1",
     "raf": "^3.4.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
-    "react-pointable": "1.1.1"
+    "react-pointable": "1.1.1",
+    "tfjs": "0.6.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-eslint": "^8.2.2",
     "babel-jest": "^22.4.1",
     "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-object-rest-spread": "6.26.0",
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-react": "^6.24.1",

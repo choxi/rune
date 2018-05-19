@@ -1,20 +1,24 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Pointable from 'react-pointable'
+import Path from '../Path'
+import tf from 'tfjs'
 
-import './App.scss'
+import Model from '../../model'
+import './index.scss'
 
-export default class App extends React.Component {
+export default class App extends React.PureComponent {
   constructor() {
     super()
     this.state = {
       drawing: false,
       canvas: { width: 0, height: 0 },
-      paths: [],
-      currentPath: [],
+      gestures: [],
+      currentGesture: { canvas: null, path: [] },
     }
 
     this.updateCanvasDimensions = this.updateCanvasDimensions.bind(this)
+    this.model = new Model()
   }
 
   componentDidMount() {
@@ -34,13 +38,14 @@ export default class App extends React.Component {
   pointerDown(event) {
     const x = event.offsetX
     const y = event.offsetY
-    const currentPath = [{ x, y}]
+    const currentGesture = {canvas: { ...this.state.canvas }, path: [{x, y}]}
     const ctx = this.canvas.getContext('2d')
+    ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
     ctx.beginPath()
     ctx.moveTo(x, y)
 
-    this.setState({drawing: true, currentPath})
+    this.setState({drawing: true, currentGesture})
   }
 
   pointerMove(event) {
@@ -49,28 +54,39 @@ export default class App extends React.Component {
 
     const x = event.offsetX
     const y = event.offsetY
-    const currentPath = [...this.state.currentPath, {x, y}]
     const ctx = this.canvas.getContext('2d')
+    const path = [...this.state.currentGesture.path, {x, y}]
+    const currentGesture = { ...this.state.currentGesture, path }
 
     ctx.lineTo(x, y)
     ctx.stroke()
 
-    this.setState({ currentPath })
+    this.setState({ currentGesture })
   }
 
   pointerUp(event) {
-    const paths = [...this.state.paths, this.state.currentPath]
-    const currentPath = []
+    const gestures = [...this.state.gestures, this.state.currentGesture]
+    const currentGesture = { canvas: null, path: [] }
 
-    this.setState({drawing: false, paths, currentPath})
+    this.setState({drawing: false, gestures, currentGesture})
+  }
+
+  async train() {
+    const h = await this.model.train()
   }
 
   render() {
+    const gestures = this.state.gestures.map((gesture, index) => {
+      return <Path key={index} path={gesture.path} canvas={gesture.canvas} />
+    })
+
     return (
       <div className="App">
         <div className="Sidebar">
-          <p>Stuff</p>
+          <button onClick={() => this.train()}>Train</button>
+          {gestures}
         </div>
+
         <div className="Viewport" ref={node => this.viewport = node}>
           <Pointable 
             onPointerDown={event => this.pointerDown(event)}
