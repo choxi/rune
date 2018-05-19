@@ -13,6 +13,8 @@ export default class App extends React.Component {
       paths: [],
       currentPath: [],
     }
+
+    this.updateCanvasDimensions = this.updateCanvasDimensions.bind(this)
   }
 
   componentDidMount() {
@@ -25,42 +27,60 @@ export default class App extends React.Component {
   }
 
   updateCanvasDimensions() {
-    this.setState({ canvas: { width: window.innerWidth, height: window.innerHeight }})
+    let { clientWidth, clientHeight } = this.viewport
+    this.setState({ canvas: { width: clientWidth, height: clientHeight }})
   }
 
   pointerDown(event) {
-    const { x, y } = event
+    const x = event.offsetX
+    const y = event.offsetY
+    const currentPath = [{ x, y}]
     const ctx = this.canvas.getContext('2d')
 
     ctx.beginPath()
     ctx.moveTo(x, y)
 
-    this.setState({drawing: true})
+    this.setState({drawing: true, currentPath})
   }
 
   pointerMove(event) {
-    if(!this.state.drawing) {
+    if(!this.state.drawing)
       return
-    }
 
+    const x = event.offsetX
+    const y = event.offsetY
+    const currentPath = [...this.state.currentPath, {x, y}]
     const ctx = this.canvas.getContext('2d')
-    ctx.lineTo(event.x, event.y)
+
+    ctx.lineTo(x, y)
     ctx.stroke()
+
+    this.setState({ currentPath })
   }
 
   pointerUp(event) {
-    this.setState({drawing: false})
+    const paths = [...this.state.paths, this.state.currentPath]
+    const currentPath = []
+
+    this.setState({drawing: false, paths, currentPath})
   }
 
   render() {
     return (
-      <Pointable 
-        onPointerDown={event => this.pointerDown(event)}
-        onPointerMove={event => this.pointerMove(event)}
-        onPointerUp={event => this.pointerUp(event)}
-      >
-        <canvas { ...this.state.canvas } ref={node => this.canvas = node}></canvas>
-      </Pointable>
+      <div className="App">
+        <div className="Sidebar">
+          <p>Stuff</p>
+        </div>
+        <div className="Viewport" ref={node => this.viewport = node}>
+          <Pointable 
+            onPointerDown={event => this.pointerDown(event)}
+            onPointerMove={event => this.pointerMove(event)}
+            onPointerUp={event => this.pointerUp(event)}
+          >
+            <canvas { ...this.state.canvas } ref={node => this.canvas = node}></canvas>
+          </Pointable>
+        </div>
+      </div>
     )
   }
 }
