@@ -79,11 +79,12 @@ export default class App extends React.PureComponent {
   }
 
   preprocessGestures() {
+    const data = []
     this.state.gestures.forEach((gesture, index) => {
       const canvas = this.gestureRefs[index].canvas
-      const data = this.preprocessGesture(canvas)
-      debugger
+      data.push(this.preprocessGesture(canvas))
     })
+    return data
   }
 
   preprocessGesture(canvas) {
@@ -108,10 +109,19 @@ export default class App extends React.PureComponent {
     const data = imageDataScaled.data
     const input = new Float32Array(784)
     for (let i = 0, len = data.length; i < len; i += 4) {
-      input[i / 4] = data[i + 3] / 255
+      input[i / 4] = Math.ceil(data[i + 3] / 255)
     }
 
-    return input
+    const grid = []
+    for(let r = 0; r < 28; r++) {
+      let row = []
+      for(let c = 0; c < 28; c++) {
+        row.push(input[r * 28 + c])
+      }
+      grid.push(row)
+    }
+
+    return grid
   }
 
   render() {
