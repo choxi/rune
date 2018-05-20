@@ -76,6 +76,8 @@ export default class App extends React.PureComponent {
   async train() {
     const data = this.preprocessGestures()
     const h = await this.model.train(data)
+    console.log(`Loss: ${ h.history.loss[0] }`)
+    console.log(`Accuracy: ${ h.history.acc[0] }`)
   }
 
   preprocessGestures() {
@@ -107,9 +109,9 @@ export default class App extends React.PureComponent {
     ctxScaled.restore()
 
     const data = imageDataScaled.data
-    const input = new Float32Array(784)
+    const input = new Array(784)
     for (let i = 0, len = data.length; i < len; i += 4) {
-      input[i / 4] = Math.ceil(data[i + 3] / 255)
+      input[i / 4] = [ Math.ceil(data[i + 3] / 255) ]
     }
 
     const grid = []

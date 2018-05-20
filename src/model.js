@@ -48,15 +48,16 @@ export default class Model {
     })
   }
 
-  async train() {
-    const BATCH_SIZE = 1
-    const BATCH_EPOCHS = 1
+  async train(data) {
+    const BATCH_EPOCHS = 10
     const NUM_CLASSES = 10
-    const batch = tf.zeros([BATCH_SIZE,28,28,1])
-    const labels = tf.zeros([BATCH_SIZE,NUM_CLASSES])
+
+    const batchSize = data.length
+    const batch = tf.tensor(data)
+    const labels = tf.zeros([batchSize,NUM_CLASSES])
 
     const history = await this.model.fit(batch, labels, {
-      batchSize: BATCH_SIZE,
+      batchSize: batchSize,
       epochs: BATCH_EPOCHS
     })
 
