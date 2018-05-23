@@ -16,8 +16,11 @@ html, body, #app, .App {
   background: $silver;
 }
 
-.Viewport { 
+.RightPane {
   flex-grow: 1;
+}
+
+.Viewport { 
   height: 100%;
 }
 

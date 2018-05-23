@@ -138,16 +138,23 @@ export default class App extends React.PureComponent {
           {gestures}
         </div>
 
-        <div className="Viewport" ref={node => this.viewport = node}>
-          <Pointable 
-            onPointerDown={event => this.pointerDown(event)}
-            onPointerMove={event => this.pointerMove(event)}
-            onPointerUp={event => this.pointerUp(event)}
-          >
-            <canvas { ...this.state.canvas } ref={node => this.canvas = node}></canvas>
-            <canvas id="input-canvas-centercrop" style={{ display: 'none' }}></canvas>
-            <canvas id="input-canvas-scaled" width="28" height="28" style={{ display: 'none' }}></canvas>
-          </Pointable>
+        <div className="RightPane">
+          <div className="RightPane__labeler">
+            <button>Square</button>
+            <button>Circle</button>
+            <button>Triangle</button>
+          </div>
+          <div className="Viewport" ref={node => this.viewport = node}>
+            <Pointable 
+              onPointerDown={event => this.pointerDown(event)}
+              onPointerMove={event => this.pointerMove(event)}
+              onPointerUp={event => this.pointerUp(event)}
+            >
+              <canvas { ...this.state.canvas } ref={node => this.canvas = node}></canvas>
+              <canvas id="input-canvas-centercrop" style={{ display: 'none' }}></canvas>
+              <canvas id="input-canvas-scaled" width="28" height="28" style={{ display: 'none' }}></canvas>
+            </Pointable>
+          </div>
         </div>
       </div>
     )
