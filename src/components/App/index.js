@@ -9,6 +9,8 @@ import Model from '../../model'
 import { centerCrop } from '../../utils'
 import './index.scss'
 
+const AIRTABLE_TABLE_NAME = 'Development'
+
 export default class App extends React.PureComponent {
   constructor() {
     super()
@@ -20,7 +22,7 @@ export default class App extends React.PureComponent {
       currentGesture: { label: null, canvas: null, path: [] },
     }
 
-    Airtable.configure({ apiKey: 'keyJzEMcRpYkme8V6' })
+    this.db = new Airtable({ apiKey: 'keyJzEMcRpYkme8V6' }).base('appLVCDspzsAACmVF')
 
     this.updateCanvasDimensions = this.updateCanvasDimensions.bind(this)
     this.model = new Model()
@@ -82,14 +84,33 @@ export default class App extends React.PureComponent {
     const gestures = [ ...this.state.gestures, gesture ]
     const currentGesture = { canvas: null, path: [] }
 
+    const bitmap = this.preprocessGesture(this.canvas)
+
+    this.db(AIRTABLE_TABLE_NAME).create({ bitmap: JSON.stringify(bitmap), gesture: JSON.stringify(gesture.path), label: gesture.label })
     this.setState({gestures, currentGesture})
   }
 
   async train() {
-    const data = this.preprocessGestures()
-    const h = await this.model.train(data)
-    console.log(`Loss: ${ h.history.loss[0] }`)
-    console.log(`Accuracy: ${ h.history.acc[0] }`)
+    const data = []
+    const labels = []
+
+    this.db(AIRTABLE_TABLE_NAME).select({ view: "Grid view" }).eachPage((records, fetchNextPage) => {
+        // This function (`page`) will get called for each page of records.
+
+        records.forEach((record) => {
+          data.push(JSON.parse(record.get('bitmap')))
+          labels.push(record.get('label'))
+        })
+
+        fetchNextPage()
+
+    }, async (err) => {
+      if (err) { console.error(err); return; }
+
+      const h = await this.model.train(data, labels)
+      console.log(`Loss: ${ h.history.loss[0] }`)
+      console.log(`Accuracy: ${ h.history.acc[0] }`)
+    })
   }
 
   preprocessGestures() {
@@ -158,9 +179,9 @@ export default class App extends React.PureComponent {
 
         <div className="RightPane">
           <div className="RightPane__labeler">
-            <button onClick={() => this.setLabel("square")}>Square</button>
-            <button onClick={() => this.setLabel("circle")}>Circle</button>
-            <button onClick={() => this.setLabel("triangle")}>Triangle</button>
+            <button onClick={() => this.setLabel(0)}>Square</button>
+            <button onClick={() => this.setLabel(1)}>Circle</button>
+            <button onClick={() => this.setLabel(2)}>Triangle</button>
           </div>
           <div className="Viewport" ref={node => this.viewport = node}>
             <Pointable

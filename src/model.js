@@ -36,7 +36,7 @@ export default class Model {
     this.model.add(tf.layers.flatten())
 
     this.model.add(tf.layers.dense({
-      units: 10,
+      units: 3,
       kernelInitializer: 'VarianceScaling',
       activation: 'softmax'
     }))
@@ -48,15 +48,16 @@ export default class Model {
     })
   }
 
-  async train(data) {
+  async train(data, labels) {
     const BATCH_EPOCHS = 10
-    const NUM_CLASSES = 10
+    const NUM_CLASSES = 3
 
     const batchSize = data.length
     const batch = tf.tensor(data)
-    const labels = tf.zeros([batchSize,NUM_CLASSES])
 
-    const history = await this.model.fit(batch, labels, {
+    const oneHotLabels = tf.oneHot(tf.tensor1d(labels, 'int32'), NUM_CLASSES)
+
+    const history = await this.model.fit(batch, oneHotLabels, {
       batchSize: batchSize,
       epochs: BATCH_EPOCHS
     })
