@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import Pointable from 'react-pointable'
 import Path from '../Path'
 import tf from 'tfjs'
+import Airtable from 'airtable'
 
 import Model from '../../model'
 import { centerCrop } from '../../utils'
@@ -11,12 +12,15 @@ import './index.scss'
 export default class App extends React.PureComponent {
   constructor() {
     super()
+
     this.state = {
       drawing: false,
       canvas: { width: 0, height: 0 },
       gestures: [],
-      currentGesture: { canvas: null, path: [] },
+      currentGesture: { label: null, canvas: null, path: [] },
     }
+
+    Airtable.configure({ apiKey: 'keyJzEMcRpYkme8V6' })
 
     this.updateCanvasDimensions = this.updateCanvasDimensions.bind(this)
     this.model = new Model()
@@ -40,7 +44,7 @@ export default class App extends React.PureComponent {
   pointerDown(event) {
     const x = event.offsetX
     const y = event.offsetY
-    const currentGesture = {canvas: { ...this.state.canvas }, path: [{x, y}]}
+    const currentGesture = { canvas: { ...this.state.canvas }, path: [{x, y}], label: null }
     const ctx = this.canvas.getContext('2d')
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
@@ -67,10 +71,18 @@ export default class App extends React.PureComponent {
   }
 
   pointerUp(event) {
-    const gestures = [...this.state.gestures, this.state.currentGesture]
+    this.setState({ drawing: false })
+  }
+
+  setLabel(label) {
+    if(this.state.currentGesture.path.length === 0)
+      return
+
+    const gesture = { ...this.state.currentGesture, label }
+    const gestures = [ ...this.state.gestures, gesture ]
     const currentGesture = { canvas: null, path: [] }
 
-    this.setState({drawing: false, gestures, currentGesture})
+    this.setState({gestures, currentGesture})
   }
 
   async train() {
@@ -128,7 +140,13 @@ export default class App extends React.PureComponent {
 
   render() {
     const gestures = this.state.gestures.map((gesture, index) => {
-      return <Path ref={node => this.gestureRefs[index] = node } key={index} path={gesture.path} canvas={gesture.canvas} />
+      return <Path
+        ref={node => this.gestureRefs[index] = node }
+        key={index}
+        label={gesture.label}
+        path={gesture.path}
+        canvas={gesture.canvas}
+      />
     })
 
     return (
@@ -140,12 +158,12 @@ export default class App extends React.PureComponent {
 
         <div className="RightPane">
           <div className="RightPane__labeler">
-            <button>Square</button>
-            <button>Circle</button>
-            <button>Triangle</button>
+            <button onClick={() => this.setLabel("square")}>Square</button>
+            <button onClick={() => this.setLabel("circle")}>Circle</button>
+            <button onClick={() => this.setLabel("triangle")}>Triangle</button>
           </div>
           <div className="Viewport" ref={node => this.viewport = node}>
-            <Pointable 
+            <Pointable
               onPointerDown={event => this.pointerDown(event)}
               onPointerMove={event => this.pointerMove(event)}
               onPointerUp={event => this.pointerUp(event)}
