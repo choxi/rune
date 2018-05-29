@@ -1,4 +1,5 @@
 import React from 'react'
+import { LABELS } from '../../model'
 
 export default class Path extends React.PureComponent {
   componentDidMount() {
@@ -23,7 +24,8 @@ export default class Path extends React.PureComponent {
 
   render() {
     return <div className="Path">
-      <div className="Path__label">{ this.props.label }</div>
+      <div className="Path__label">{ LABELS[this.props.label] }</div>
+      <div>#{ this.props.id }</div>
       <canvas 
         ref={node => this.canvas = node}
         width={this.props.canvas.width} 

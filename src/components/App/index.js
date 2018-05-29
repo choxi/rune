@@ -5,7 +5,7 @@ import Path from '../Path'
 import tf from 'tfjs'
 import Airtable from 'airtable'
 
-import Model from '../../model'
+import Model, { LABELS } from '../../model'
 import { centerCrop } from '../../utils'
 import './index.scss'
 
@@ -80,14 +80,25 @@ export default class App extends React.PureComponent {
     if(this.state.currentGesture.path.length === 0)
       return
 
-    const gesture = { ...this.state.currentGesture, label }
-    const gestures = [ ...this.state.gestures, gesture ]
-    const currentGesture = { canvas: null, path: [] }
-
+    const { path } = this.state.currentGesture
     const bitmap = this.preprocessGesture(this.canvas)
 
-    this.db(AIRTABLE_TABLE_NAME).create({ bitmap: JSON.stringify(bitmap), gesture: JSON.stringify(gesture.path), label: gesture.label })
-    this.setState({gestures, currentGesture})
+    this.db(AIRTABLE_TABLE_NAME).create(
+      {
+        bitmap: JSON.stringify(bitmap),
+        gesture: JSON.stringify(path),
+        label
+      }, (err, record) => {
+        if(err)
+          console.log(err)
+
+        const gesture = { ...this.state.currentGesture, label, id: record.get('id') }
+        const gestures = [ gesture, ...this.state.gestures ]
+        const currentGesture = { canvas: null, path: [] }
+
+        this.setState({ gestures, currentGesture })
+      }
+    )
   }
 
   async train() {
@@ -160,10 +171,11 @@ export default class App extends React.PureComponent {
   }
 
   render() {
-    const gestures = this.state.gestures.map((gesture, index) => {
+    const gestures = this.state.gestures.map((gesture) => {
       return <Path
-        ref={node => this.gestureRefs[index] = node }
-        key={index}
+        ref={node => this.gestureRefs[gesture.id] = node }
+        id={gesture.id}
+        key={gesture.id}
         label={gesture.label}
         path={gesture.path}
         canvas={gesture.canvas}
@@ -179,9 +191,12 @@ export default class App extends React.PureComponent {
 
         <div className="RightPane">
           <div className="RightPane__labeler">
-            <button onClick={() => this.setLabel(0)}>Square</button>
-            <button onClick={() => this.setLabel(1)}>Circle</button>
-            <button onClick={() => this.setLabel(2)}>Triangle</button>
+            {
+              Object.keys(LABELS).map(id => {
+                const name = LABELS[id]
+                return <button onClick={() => this.setLabel(parseInt(id))}>{ name }</button>
+              })
+            }
           </div>
           <div className="Viewport" ref={node => this.viewport = node}>
             <Pointable

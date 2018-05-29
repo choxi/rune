@@ -2,6 +2,16 @@ import * as tf from '@tensorflow/tfjs'
 
 const LEARNING_RATE = 0.15
 const optimizer = tf.train.sgd(LEARNING_RATE)
+export const LABELS = {
+  0: "square",
+  1: "circle",
+  2: "triangle",
+  3: "star",
+  4: "zigzag",
+  5: "heart"
+}
+
+const NUM_CLASSES = Object.keys(LABELS).length
 
 export default class Model {
   constructor() {
@@ -36,7 +46,7 @@ export default class Model {
     this.model.add(tf.layers.flatten())
 
     this.model.add(tf.layers.dense({
-      units: 3,
+      units: NUM_CLASSES,
       kernelInitializer: 'VarianceScaling',
       activation: 'softmax'
     }))
@@ -50,7 +60,6 @@ export default class Model {
 
   async train(data, labels) {
     const BATCH_EPOCHS = 10
-    const NUM_CLASSES = 3
 
     const batchSize = data.length
     const batch = tf.tensor(data)
