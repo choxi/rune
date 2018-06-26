@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs'
+import { shuffle } from './utils'
 
 const LEARNING_RATE = 0.15
 const optimizer = tf.train.sgd(LEARNING_RATE)
@@ -58,17 +59,30 @@ export default class Model {
     })
   }
 
-  async train(data, labels) {
-    const BATCH_EPOCHS = 10
+  // data => [
+  //   [bitmap, label],
+  //   [[0,1,0,0...], "square"],
+  //   ...
+  // ]
+  async train(data) {
+    const BATCH_EPOCHS = 100
+    const BATCH_SIZE = 32
 
-    const batchSize = data.length
-    const batch = tf.tensor(data)
-
+    const labels = data.map(d => d[1])
     const oneHotLabels = tf.oneHot(tf.tensor1d(labels, 'int32'), NUM_CLASSES)
+    const batch = tf.tensor(data.map(d => d[0]))
 
+    console.log("Training...")
     const history = await this.model.fit(batch, oneHotLabels, {
-      batchSize: batchSize,
-      epochs: BATCH_EPOCHS
+      batchSize: BATCH_SIZE,
+      epochs: BATCH_EPOCHS,
+      shuffle: true,
+      validationSplit: 0.3,
+      callbacks: {
+        onEpochEnd: async (epoch, log) => {
+          console.log(`Epoch ${epoch}: loss = ${log.loss} acc = ${log.acc}`);
+        }
+      }
     })
 
     return history

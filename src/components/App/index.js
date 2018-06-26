@@ -103,24 +103,22 @@ export default class App extends React.PureComponent {
 
   async train() {
     const data = []
-    const labels = []
 
+    console.log("Fetching data...")
     this.db(AIRTABLE_TABLE_NAME).select({ view: "Grid view" }).eachPage((records, fetchNextPage) => {
         // This function (`page`) will get called for each page of records.
 
         records.forEach((record) => {
-          data.push(JSON.parse(record.get('bitmap')))
-          labels.push(record.get('label'))
+          const bitmap = JSON.parse(record.get('bitmap'))
+          const label = record.get('label')
+          data.push([bitmap, label])
         })
 
         fetchNextPage()
 
     }, async (err) => {
       if (err) { console.error(err); return; }
-
-      const h = await this.model.train(data, labels)
-      console.log(`Loss: ${ h.history.loss[0] }`)
-      console.log(`Accuracy: ${ h.history.acc[0] }`)
+      this.model.train(data)
     })
   }
 
