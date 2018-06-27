@@ -1,10 +1,11 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import Pointable from 'react-pointable'
-import Path from '../Path'
 import tf from 'tfjs'
 import Airtable from 'airtable'
 
+import Path from '../Path'
+import Bitmap from '../Bitmap'
 import Model, { LABELS } from '../../model'
 import { indexOfMax, centerCrop } from '../../utils'
 import './index.scss'
@@ -19,7 +20,7 @@ export default class App extends React.PureComponent {
       drawing: false,
       canvas: { width: 0, height: 0 },
       gestures: [],
-      currentGesture: { label: null, canvas: null, path: [] },
+      currentGesture: { label: null, canvas: null, path: [], bitmap: null },
       prediction: null
     }
 
@@ -77,7 +78,10 @@ export default class App extends React.PureComponent {
   }
 
   pointerUp(event) {
-    this.setState({ drawing: false })
+    const bitmap = this.preprocessGesture(this.canvas)
+    const currentGesture = Object.assign({}, this.state.currentGesture, { bitmap })
+
+    this.setState({ drawing: false, currentGesture })
     this.predict()
   }
 
@@ -193,6 +197,11 @@ export default class App extends React.PureComponent {
       />
     })
 
+    let bitmap
+    if (this.state.currentGesture.bitmap) {
+      bitmap = <Bitmap rows={28} columns={28} data={this.state.currentGesture.bitmap} />
+    }
+
     return (
       <div className="App">
         <div className="Sidebar">
@@ -218,6 +227,7 @@ export default class App extends React.PureComponent {
             }
           </div>
           <div className="Viewport" ref={node => this.viewport = node}>
+            { bitmap }
             <Pointable
               onPointerDown={event => this.pointerDown(event)}
               onPointerMove={event => this.pointerMove(event)}

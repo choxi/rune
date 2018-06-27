@@ -24,6 +24,14 @@ html, body, #app, .App {
   height: 100%;
 }
 
+.App .Bitmap {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  height: 200px;
+  width: 200px;
+}
+
 canvas {
   width: 100%;
   height: 100%;
@@ -32,4 +40,15 @@ canvas {
 
 .Button--highlighted {
   background: green;
+}
+
+.Bitmap__grid {
+  height: 100%;
+  width: 100%;
+  border: 1px solid #666;
+  background: white;
+}
+
+.Bitmap__grid__cell {
+  border: 1px solid black;
 }
