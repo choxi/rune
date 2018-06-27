@@ -78,6 +78,7 @@ export default class App extends React.PureComponent {
 
   pointerUp(event) {
     this.setState({ drawing: false })
+    this.predict()
   }
 
   setLabel(label) {
@@ -172,6 +173,14 @@ export default class App extends React.PureComponent {
     return grid
   }
 
+  labelClasses(name) {
+    if (this.state.prediction === name) {
+      return "Button--highlighted"
+    }
+
+    return "Button"
+  }
+
   render() {
     const gestures = this.state.gestures.map((gesture) => {
       return <Path
@@ -198,7 +207,13 @@ export default class App extends React.PureComponent {
             {
               Object.keys(LABELS).map(id => {
                 const name = LABELS[id]
-                return <button onClick={() => this.setLabel(parseInt(id))}>{ name }</button>
+                const classes = this.labelClasses(name)
+                return <button
+                  className={classes}
+                  onClick={() => this.setLabel(parseInt(id))}
+                >
+                  { name }
+                </button>
               })
             }
           </div>

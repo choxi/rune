@@ -67,8 +67,10 @@ export default class Model {
   //   ...
   // ]
   async train(data) {
-    const BATCH_EPOCHS = 5
+    const BATCH_EPOCHS = 30
     const BATCH_SIZE = 32
+
+    data = shuffle(data)
 
     const labels = data.map(d => d[1])
     const oneHotLabels = tf.oneHot(tf.tensor1d(labels, 'int32'), NUM_CLASSES)
