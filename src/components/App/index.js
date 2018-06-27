@@ -6,7 +6,7 @@ import tf from 'tfjs'
 import Airtable from 'airtable'
 
 import Model, { LABELS } from '../../model'
-import { centerCrop } from '../../utils'
+import { indexOfMax, centerCrop } from '../../utils'
 import './index.scss'
 
 const AIRTABLE_TABLE_NAME = 'Development'
@@ -20,6 +20,7 @@ export default class App extends React.PureComponent {
       canvas: { width: 0, height: 0 },
       gestures: [],
       currentGesture: { label: null, canvas: null, path: [] },
+      prediction: null
     }
 
     this.db = new Airtable({ apiKey: 'keyJzEMcRpYkme8V6' }).base('appLVCDspzsAACmVF')
@@ -27,6 +28,9 @@ export default class App extends React.PureComponent {
     this.updateCanvasDimensions = this.updateCanvasDimensions.bind(this)
     this.model = new Model()
     this.gestureRefs = {}
+
+    this.train = this.train.bind(this)
+    this.predict = this.predict.bind(this)
   }
 
   componentDidMount() {
@@ -122,13 +126,13 @@ export default class App extends React.PureComponent {
     })
   }
 
-  preprocessGestures() {
-    const data = []
-    this.state.gestures.forEach((gesture, index) => {
-      const canvas = this.gestureRefs[index].canvas
-      data.push(this.preprocessGesture(canvas))
-    })
-    return data
+  predict() {
+    const bitmap = this.preprocessGesture(this.canvas)
+    const oneHotResult = this.model.predict([bitmap])
+    const labelIndex = indexOfMax(oneHotResult.dataSync())
+    const prediction = LABELS[labelIndex]
+
+    this.setState({ prediction })
   }
 
   preprocessGesture(canvas) {
@@ -183,8 +187,10 @@ export default class App extends React.PureComponent {
     return (
       <div className="App">
         <div className="Sidebar">
-          <button onClick={() => this.train()}>Train</button>
-          {gestures}
+          <button onClick={this.train}>Train</button>
+          <button onClick={this.predict}>Predict</button>
+          { this.state.prediction }
+          { gestures }
         </div>
 
         <div className="RightPane">

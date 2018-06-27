@@ -1,3 +1,22 @@
+// https://stackoverflow.com/questions/11301438/return-index-of-greatest-value-in-an-array
+export function indexOfMax(arr) {
+    if (arr.length === 0) {
+        return -1;
+    }
+
+    var max = arr[0];
+    var maxIndex = 0;
+
+    for (var i = 1; i < arr.length; i++) {
+        if (arr[i] > max) {
+            maxIndex = i;
+            max = arr[i];
+        }
+    }
+
+    return maxIndex;
+}
+
 // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
 export function shuffle(array) {
   var currentIndex = array.length, temporaryValue, randomIndex;
