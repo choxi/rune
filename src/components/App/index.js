@@ -6,11 +6,12 @@ import Airtable from 'airtable'
 
 import Path from '../Path'
 import Bitmap from '../Bitmap'
-import Model, { LABELS } from '../../model'
+import Model, { INPUT_SHAPE, LABELS } from '../../model'
 import { indexOfMax, centerCrop } from '../../utils'
 import './index.scss'
 
-const AIRTABLE_TABLE_NAME = 'Development'
+const AIRTABLE_TABLE_NAME = 'Development-2'
+const STROKE_WIDTH = 10
 
 export default class App extends React.PureComponent {
   constructor() {
@@ -54,6 +55,7 @@ export default class App extends React.PureComponent {
     const currentGesture = { canvas: { ...this.state.canvas }, path: [{x, y}], label: null }
     const ctx = this.canvas.getContext('2d')
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    ctx.lineWidth = STROKE_WIDTH
 
     ctx.beginPath()
     ctx.moveTo(x, y)
@@ -152,24 +154,25 @@ export default class App extends React.PureComponent {
 
     // scaled to 28 x 28
     const ctxScaled = document.getElementById('input-canvas-scaled').getContext('2d')
-    ctxScaled.save()
-    ctxScaled.scale(28 / ctxCenterCrop.canvas.width, 28 / ctxCenterCrop.canvas.height)
-    ctxScaled.clearRect(0, 0, ctxCenterCrop.canvas.width, ctxCenterCrop.canvas.height)
-    ctxScaled.drawImage(document.getElementById('input-canvas-centercrop'), 0, 0)
-    const imageDataScaled = ctxScaled.getImageData(0, 0, ctxScaled.canvas.width, ctxScaled.canvas.height)
-    ctxScaled.restore()
+    const scaledWidth = INPUT_SHAPE[0]
+    const scaledHeight = INPUT_SHAPE[1]
+    ctxScaled.canvas.width = scaledWidth
+    ctxScaled.canvas.height = scaledHeight
+
+    ctxScaled.drawImage(ctxCenterCrop.canvas, 0, 0, scaledWidth, scaledHeight)
+    const imageDataScaled = ctxScaled.getImageData(0, 0, scaledWidth, scaledHeight)
 
     const data = imageDataScaled.data
-    const input = new Array(784)
+    const input = new Array(scaledWidth * scaledHeight)
     for (let i = 0, len = data.length; i < len; i += 4) {
       input[i / 4] = [ Math.ceil(data[i + 3] / 255) ]
     }
 
     const grid = []
-    for(let r = 0; r < 28; r++) {
+    for(let r = 0; r < scaledHeight; r++) {
       let row = []
-      for(let c = 0; c < 28; c++) {
-        row.push(input[r * 28 + c])
+      for(let c = 0; c < scaledWidth; c++) {
+        row.push(input[r * scaledWidth + c])
       }
       grid.push(row)
     }
@@ -199,7 +202,7 @@ export default class App extends React.PureComponent {
 
     let bitmap
     if (this.state.currentGesture.bitmap) {
-      bitmap = <Bitmap rows={28} columns={28} data={this.state.currentGesture.bitmap} />
+      bitmap = <Bitmap rows={INPUT_SHAPE[0]} columns={INPUT_SHAPE[1]} data={this.state.currentGesture.bitmap} />
     }
 
     return (
@@ -234,8 +237,8 @@ export default class App extends React.PureComponent {
               onPointerUp={event => this.pointerUp(event)}
             >
               <canvas { ...this.state.canvas } ref={node => this.canvas = node}></canvas>
-              <canvas id="input-canvas-centercrop" style={{ display: 'none' }}></canvas>
-              <canvas id="input-canvas-scaled" width="28" height="28" style={{ display: 'none' }}></canvas>
+              <canvas style={{display: 'none'}} id="input-canvas-centercrop"></canvas>
+              <canvas style={{display: 'none'}} id="input-canvas-scaled" width="100" height="100"></canvas>
             </Pointable>
           </div>
         </div>

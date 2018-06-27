@@ -5,6 +5,8 @@ window.tf = tf
 
 const LEARNING_RATE = 0.15
 const optimizer = tf.train.sgd(LEARNING_RATE)
+
+export const INPUT_SHAPE = [100, 100, 1]
 export const LABELS = {
   0: "square",
   1: "circle",
@@ -20,7 +22,7 @@ export default class Model {
   constructor() {
     this.model = tf.sequential()
     this.model.add(tf.layers.conv2d({
-      inputShape: [28, 28, 1],
+      inputShape: INPUT_SHAPE,
       kernelSize: 5,
       filters: 8,
       strides: 1,
@@ -67,7 +69,7 @@ export default class Model {
   //   ...
   // ]
   async train(data) {
-    const BATCH_EPOCHS = 30
+    const BATCH_EPOCHS = 10
     const BATCH_SIZE = 32
 
     data = shuffle(data)
