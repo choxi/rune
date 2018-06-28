@@ -49,9 +49,7 @@ export default class App extends React.PureComponent {
     this.setState({ canvas: { width: clientWidth, height: clientHeight }})
   }
 
-  pointerDown(event) {
-    const x = event.offsetX
-    const y = event.offsetY
+  beginPath(x, y) {
     const currentGesture = { canvas: { ...this.state.canvas }, path: [{x, y}], label: null }
     const ctx = this.canvas.getContext('2d')
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
@@ -63,12 +61,7 @@ export default class App extends React.PureComponent {
     this.setState({drawing: true, currentGesture})
   }
 
-  pointerMove(event) {
-    if(!this.state.drawing)
-      return
-
-    const x = event.offsetX
-    const y = event.offsetY
+  movePath(x, y) {
     const ctx = this.canvas.getContext('2d')
     const path = [...this.state.currentGesture.path, {x, y}]
     const currentGesture = { ...this.state.currentGesture, path }
@@ -79,12 +72,33 @@ export default class App extends React.PureComponent {
     this.setState({ currentGesture })
   }
 
-  pointerUp(event) {
+  endPath() {
     const bitmap = this.preprocessGesture(this.canvas)
     const currentGesture = Object.assign({}, this.state.currentGesture, { bitmap })
 
     this.setState({ drawing: false, currentGesture })
     this.predict()
+  }
+
+  pointerDown(event) {
+    const x = event.offsetX
+    const y = event.offsetY
+
+    this.beginPath(x, y)
+  }
+
+  pointerMove(event) {
+    if(!this.state.drawing)
+      return
+
+    const x = event.offsetX
+    const y = event.offsetY
+
+    this.movePath(x, y)
+  }
+
+  pointerUp(event) {
+    this.endPath()
   }
 
   setLabel(label) {
@@ -129,6 +143,7 @@ export default class App extends React.PureComponent {
 
     }, async (err) => {
       if (err) { console.error(err); return; }
+      console.log(`Fetched ${data.length} samples`)
       this.model.train(data)
     })
   }
@@ -188,6 +203,26 @@ export default class App extends React.PureComponent {
     return "Button"
   }
 
+  touchStart(event) {
+    const rect = event.target.getBoundingClientRect()
+    const x = event.changedTouches[0].clientX - rect.left
+    const y = event.changedTouches[0].clientY - rect.top
+
+    this.beginPath(x, y)
+  }
+
+  touchMove(event) {
+    const rect = event.target.getBoundingClientRect()
+    const x = event.changedTouches[0].clientX - rect.left
+    const y = event.changedTouches[0].clientY - rect.top
+
+    this.movePath(x, y)
+  }
+
+  touchEnd(event) {
+    this.endPath()
+  }
+
   render() {
     const gestures = this.state.gestures.map((gesture) => {
       return <Path
@@ -236,9 +271,15 @@ export default class App extends React.PureComponent {
               onPointerMove={event => this.pointerMove(event)}
               onPointerUp={event => this.pointerUp(event)}
             >
-              <canvas { ...this.state.canvas } ref={node => this.canvas = node}></canvas>
-              <canvas style={{display: 'none'}} id="input-canvas-centercrop"></canvas>
-              <canvas style={{display: 'none'}} id="input-canvas-scaled" width="100" height="100"></canvas>
+              <div 
+                onTouchStart={event => this.touchStart(event)}
+                onTouchMove={event => this.touchMove(event)}
+                onTouchEnd={event => this.touchEnd(event)}
+              >
+                <canvas { ...this.state.canvas } ref={node => this.canvas = node}></canvas>
+                <canvas style={{display: 'none'}} id="input-canvas-centercrop"></canvas>
+                <canvas style={{display: 'none'}} id="input-canvas-scaled" width="100" height="100"></canvas>
+              </div>
             </Pointable>
           </div>
         </div>

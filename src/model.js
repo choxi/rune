@@ -3,7 +3,7 @@ import { shuffle } from './utils'
 
 window.tf = tf
 
-const LEARNING_RATE = 0.15
+const LEARNING_RATE = 0.1
 const optimizer = tf.train.sgd(LEARNING_RATE)
 
 export const INPUT_SHAPE = [100, 100, 1]
@@ -70,7 +70,7 @@ export default class Model {
   // ]
   async train(data) {
     const BATCH_EPOCHS = 10
-    const BATCH_SIZE = 32
+    const BATCH_SIZE = 10
 
     data = shuffle(data)
 
