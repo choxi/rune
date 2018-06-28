@@ -92,6 +92,14 @@ export default class Model {
     })
   }
 
+  async load(url) {
+    this.model = await tf.loadModel(url)
+  }
+
+  async save() {
+    this.model.save('downloads://model')
+  }
+
   predict(x) {
     return this.model.predict(tf.tensor(x))
   }

@@ -11,6 +11,7 @@ import { indexOfMax, centerCrop } from '../../utils'
 import './index.scss'
 
 const AIRTABLE_TABLE_NAME = 'Development-2'
+const MODEL_URL = 'https://s3-us-west-1.amazonaws.com/spacerocket-models/model.json'
 const STROKE_WIDTH = 10
 
 export default class App extends React.PureComponent {
@@ -29,6 +30,7 @@ export default class App extends React.PureComponent {
 
     this.updateCanvasDimensions = this.updateCanvasDimensions.bind(this)
     this.model = new Model()
+    this.model.load(MODEL_URL)
     this.gestureRefs = {}
 
     this.train = this.train.bind(this)
@@ -38,6 +40,7 @@ export default class App extends React.PureComponent {
   componentDidMount() {
     window.addEventListener('resize', this.updateCanvasDimensions)
     this.updateCanvasDimensions()
+    document.ontouchmove = function(event){ event.preventDefault(); }
   }
 
   componentWillUnmount() {
@@ -144,7 +147,8 @@ export default class App extends React.PureComponent {
     }, async (err) => {
       if (err) { console.error(err); return; }
       console.log(`Fetched ${data.length} samples`)
-      this.model.train(data)
+      await this.model.train(data)
+      this.model.save()
     })
   }
 
@@ -205,16 +209,16 @@ export default class App extends React.PureComponent {
 
   touchStart(event) {
     const rect = event.target.getBoundingClientRect()
-    const x = event.changedTouches[0].clientX - rect.left
-    const y = event.changedTouches[0].clientY - rect.top
+    const x = event.changedTouches[0].clientX
+    const y = event.changedTouches[0].clientY
 
     this.beginPath(x, y)
   }
 
   touchMove(event) {
     const rect = event.target.getBoundingClientRect()
-    const x = event.changedTouches[0].clientX - rect.left
-    const y = event.changedTouches[0].clientY - rect.top
+    const x = event.changedTouches[0].clientX
+    const y = event.changedTouches[0].clientY
 
     this.movePath(x, y)
   }
@@ -224,31 +228,8 @@ export default class App extends React.PureComponent {
   }
 
   render() {
-    const gestures = this.state.gestures.map((gesture) => {
-      return <Path
-        ref={node => this.gestureRefs[gesture.id] = node }
-        id={gesture.id}
-        key={gesture.id}
-        label={gesture.label}
-        path={gesture.path}
-        canvas={gesture.canvas}
-      />
-    })
-
-    let bitmap
-    if (this.state.currentGesture.bitmap) {
-      bitmap = <Bitmap rows={INPUT_SHAPE[0]} columns={INPUT_SHAPE[1]} data={this.state.currentGesture.bitmap} />
-    }
-
     return (
       <div className="App">
-        <div className="Sidebar">
-          <button onClick={this.train}>Train</button>
-          <button onClick={this.predict}>Predict</button>
-          { this.state.prediction }
-          { gestures }
-        </div>
-
         <div className="RightPane">
           <div className="RightPane__labeler">
             {
@@ -265,7 +246,6 @@ export default class App extends React.PureComponent {
             }
           </div>
           <div className="Viewport" ref={node => this.viewport = node}>
-            { bitmap }
             <Pointable
               onPointerDown={event => this.pointerDown(event)}
               onPointerMove={event => this.pointerMove(event)}
