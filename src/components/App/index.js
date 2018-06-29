@@ -202,7 +202,7 @@ export default class App extends React.PureComponent {
 
   labelClasses(name) {
     if (this.state.prediction === name) {
-      return "Button--highlighted"
+      return "Button Button--highlighted"
     }
 
     return "Button"
@@ -237,12 +237,12 @@ export default class App extends React.PureComponent {
               Object.keys(LABELS).map(id => {
                 const name = LABELS[id]
                 const classes = this.labelClasses(name)
-                return <button
+                return <a
                   className={classes}
                   onClick={() => this.setLabel(parseInt(id))}
                 >
                   { name }
-                </button>
+                </a>
               })
             }
           </div>
