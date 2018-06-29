@@ -40,7 +40,7 @@ export default class App extends React.PureComponent {
   componentDidMount() {
     window.addEventListener('resize', this.updateCanvasDimensions)
     this.updateCanvasDimensions()
-    document.ontouchmove = function(event){ event.preventDefault(); }
+    document.body.addEventListener('touchmove', (e) => e.preventDefault, { passive: false })
   }
 
   componentWillUnmount() {
