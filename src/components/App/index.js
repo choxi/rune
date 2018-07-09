@@ -12,7 +12,7 @@ import './index.scss'
 
 const AIRTABLE_TABLE_NAME = 'Development-2'
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY
-const MODEL_URL = 'https://s3-us-west-1.amazonaws.com/spacerocket-models/model.json'
+const MODEL_URL = 'https://s3-us-west-1.amazonaws.com/spacerocket-models/model-2.json'
 const STROKE_WIDTH = 10
 
 export default class App extends React.PureComponent {
@@ -148,8 +148,8 @@ export default class App extends React.PureComponent {
     }, async (err) => {
       if (err) { console.error(err); return; }
       console.log(`Fetched ${data.length} samples`)
-      await this.model.train(data)
-      this.model.save()
+      this.model = new Model()
+      this.model.train(data).then(() => this.model.save())
     })
   }
 
