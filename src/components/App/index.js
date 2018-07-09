@@ -12,7 +12,7 @@ import './index.scss'
 
 const AIRTABLE_TABLE_NAME = 'Development-2'
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY
-const MODEL_URL = 'https://s3-us-west-1.amazonaws.com/spacerocket-models/model-2.json'
+const MODEL_URL = 'https://s3-us-west-1.amazonaws.com/spacerocket-models/model-3.json'
 const STROKE_WIDTH = 10
 
 export default class App extends React.PureComponent {
