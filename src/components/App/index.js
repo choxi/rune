@@ -237,12 +237,8 @@ export default class App extends React.PureComponent {
               Object.keys(LABELS).map(id => {
                 const name = LABELS[id]
                 const classes = this.labelClasses(name)
-                return <a
-                  className={classes}
-                  onClick={() => this.setLabel(parseInt(id))}
-                >
-                  { name }
-                </a>
+
+                return <a key={name} className={classes}>{ name }</a>
               })
             }
           </div>
