@@ -1,6 +1,15 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 
+/**
+ * @name Bitmap 
+ * @prop {Array} [data] - 2-dimensional array of bitmap data
+ * @prop {Number} [rows] - Number of rows
+ * @prop {Number} [columns] - Number of columns
+ *
+ * @example
+ * <Bitmap data={[[0,1],[1,0]]} rows={2} columns={2} >
+ */
 export default class Bitmap extends React.Component {
   static propTypes = {
     data: PropTypes.arrayOf(PropTypes.array).isRequired,
